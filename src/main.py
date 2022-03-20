@@ -4,15 +4,24 @@
 
 
 import sys
+import os
+
 
 def boggle_solver(argv):
 
     # Input Checking
     if len(argv) != 2:
-        raise Exception("Only one argument must be given to the boggle solver")
+        raise AttributeError("Only one argument must be given to the boggle solver")
 
-    print(str(argv))
-    print(len(argv))
+    # Check if file exist
+    filepath = argv[1]
+
+    if not os.path.isfile(filepath):
+        raise FileNotFoundError("The file doesn't exist")
+    
+    # Load the file data
+    # TODO
+
 
 if __name__ == '__main__':
     boggle_solver(sys.argv)
