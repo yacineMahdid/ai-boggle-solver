@@ -22,5 +22,9 @@ There is a few variant of the original boggle game which includes:
 ## Current State 🦝
 There is absolutely nothing working right now 👍👍👍
 
+This program requires a dictionary files to understand how to find a word.
+The current dictionary included is an english one:
+- [English only Alphabetical Words](https://github.com/dwyl/english-words/blob/master/words_alpha.txt)
+
 ## License
 This is MIT!
