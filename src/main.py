@@ -8,12 +8,12 @@ import copy
 
 class Grid:
     """Object representation of a Boggle Grid capable of solving itself!"""
-    letters = []
-    adj_matrix = []
-    dimension = 0
+    letters = [] # letters in the grid
+    adj_matrix = [] # connection between each letters
+    dimension = 0 # the dimension of the board
 
-    dict_words = []
-    output_words = []
+    dict_words = [] # words downloaded from the dictionary
+    output_words = [] # the output words after the search
 
     def __init__(self, filepath, dictpath):
         """Constructor who take a filepath for the grid and the location of a dictionary file"""
