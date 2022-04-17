@@ -15,6 +15,7 @@ class Grid:
     output_words = []
 
     def __init__(self, filepath, dictpath):
+        """Constructor who take a filepath for the grid and the location of a dictionary file"""
 
         # Load the file data
         with open(filepath) as file:
@@ -32,8 +33,8 @@ class Grid:
         with open(dictpath) as file:
             self.dict_words = file.read().splitlines()
 
-    def create_all_permutations(self):
-
+    def find_all_words(self):
+        """main function to find all the words in the grid that are in the dictionary"""
         # Seed of the permutations
         for row_i in range(self.dimension):
             for col_i in range(self.dimension):
@@ -45,9 +46,16 @@ class Grid:
                 self.dfs(seed_letter, row_i, col_i, seed_adj_matrix)
 
 
-
     def dfs(self, current_word, row_i, col_i, adj_matrix):
+        """ standard depth first search algorithm that will add a word if valid
+            self: the current Grid object
+            current_word: the current_word formed to date in the traversal
+            row_i: the row-wise location of the current word
+            col_i: the col-wise location of the current word
+            adj_matrix: the snapshot of the connection that are allowed still in the traversal
 
+            return None
+        """
         # Check if the new word created is a valid new one
         if current_word in self.dict_words and current_word not in self.output_words and len(current_word) >= 3:
             print(current_word)
@@ -55,7 +63,7 @@ class Grid:
 
         adj_matrix[row_i][col_i] = False 
 
-        # can technically go into 8 directions including diagonals
+        # iterate on each of the theoretical 8 direction a words can be created
         for step_row_i in range(-1,2):
             next_row_i = row_i + step_row_i
 
@@ -72,7 +80,7 @@ class Grid:
                 if adj_matrix[next_row_i][next_col_i] is False:
                     continue
         
-                # Create a new word and 
+                # Create a new word  
                 next_word = current_word + self.letters[next_row_i][next_col_i]
 
                 # Recurse in the search
@@ -80,6 +88,8 @@ class Grid:
                 self.dfs(next_word, next_row_i, next_col_i, next_adj_matrix)
 
     def print_grid(self):
+        """pretty print the boggle grid"""
+
         for row in self.letters:
             for letter in row:
                 print(f"[{letter}] ", end="")
@@ -104,13 +114,12 @@ def boggle_solver(argv):
     grid.print_grid()
     
     # find all the words in the grid
-    
-    
-    grid.create_all_permutations()
+    grid.find_all_words()
+
     # Print and return all words
     for word in grid.output_words:
         print(word)
-        
+
     return grid.output_words
 
 
