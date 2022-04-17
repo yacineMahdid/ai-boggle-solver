@@ -14,6 +14,10 @@ The problem we are trying to solve here is to find as many words as possible in 
 
 It's that "simple"!
 
+The constraints are the following:
+- 2min max for finding the words
+- words needs to be at least 3 letter in length
+
 ## Variant 🐻
 There is a few variant of the original boggle game which includes:
 - different size of square boards
