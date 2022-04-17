@@ -7,6 +7,7 @@ import os
 import copy
 
 class Grid:
+    """Object representation of a Boggle Grid capable of solving itself!"""
     letters = []
     adj_matrix = []
     dimension = 0
