@@ -132,4 +132,4 @@ dmypy.json
 venv
 
 # Dictionaries
-./src/en_dict.txt
+src/en_dict.txt
