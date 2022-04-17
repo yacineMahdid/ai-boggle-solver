@@ -11,7 +11,10 @@ class Grid:
     adj_matrix = []
     dimension = 0
 
-    def __init__(self, filepath):
+    dict_words = []
+    output_words = []
+
+    def __init__(self, filepath, dictpath):
 
         # Load the file data
         with open(filepath) as file:
@@ -24,6 +27,10 @@ class Grid:
             self.adj_matrix.append([True for _ in columns])
 
         self.dimension = len(self.letters)
+
+        # Load the dictionary
+        with open(dictpath) as file:
+            self.dict_words = file.read().splitlines()
 
     def create_all_permutations(self):
 
@@ -40,6 +47,12 @@ class Grid:
 
 
     def dfs(self, current_word, row_i, col_i, adj_matrix):
+
+        # Check if the new word created is a valid new one
+        if current_word in self.dict_words and current_word not in self.output_words and len(current_word) >= 3:
+            print(current_word)
+            self.output_words.append(current_word)
+
         adj_matrix[row_i][col_i] = False 
 
         # can technically go into 8 directions including diagonals
@@ -61,7 +74,6 @@ class Grid:
         
                 # Create a new word and 
                 next_word = current_word + self.letters[next_row_i][next_col_i]
-                print(next_word)
 
                 # Recurse in the search
                 next_adj_matrix = copy.deepcopy(adj_matrix)
@@ -72,21 +84,6 @@ class Grid:
             for letter in row:
                 print(f"[{letter}] ", end="")
             print("")
-
-
-# NAIVE BRUTE FORCE VERSION
-def find_all_words(grid, dictionary_name):
-    words = [] # OUTPUT: list of valid words
-
-    # Load the dictionary
-    with open(dictionary_name) as file:
-        dict_words = file.read().splitlines()
-    
-    # Find all permutation that are possible within the grid
-    print(grid.create_all_permutations())
-    grid.print_grid()
-
-    return words
 
 
 def boggle_solver(argv):
@@ -102,16 +99,19 @@ def boggle_solver(argv):
         raise FileNotFoundError("The file doesn't exist")
     
     # Populate the Grid
-    grid = Grid(filepath)
-
-    # find all the words in the grid
     # TODO REMOVE THIS HARD CODED DICTIONARY
-    words = find_all_words(grid, 'src/en_dict.txt')
-
+    grid = Grid(filepath, 'src/en_dict.txt')
+    grid.print_grid()
+    
+    # find all the words in the grid
+    
+    
+    grid.create_all_permutations()
     # Print and return all words
-    for word in words:
+    for word in grid.output_words:
         print(word)
-    return words
+        
+    return grid.output_words
 
 
 if __name__ == '__main__':
