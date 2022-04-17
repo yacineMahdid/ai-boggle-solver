@@ -19,12 +19,19 @@ There is a few variant of the original boggle game which includes:
 - different size of square boards
 - different time limit
 
-## Current State 🦝
-There is absolutely nothing working right now 👍👍👍
+## Current State - Brute Force🦝
+Currently here is what the program needs to be run:
+- run `./setup.sh` which will download an [english dictionary]((https://github.com/dwyl/english-words/blob/master/words_alpha.txt))
+- run `python src/main.py BOGGLE_FILE` which will brute force find all the words
 
-This program requires a dictionary files to understand how to find a word.
-The current dictionary included is an english one:
-- [English only Alphabetical Words](https://github.com/dwyl/english-words/blob/master/words_alpha.txt)
+the `BOGGLE_FILE` needs to have the same format as the one in the `tests/assets/` folder:
+```
+n,y,r
+n,o,a
+o,r,s
+```
+
+The runtime for this algorithm is pretty poor right now so don't expect it to be that much useable, the search is not optimized at all.
 
 ## License
 This is MIT!
