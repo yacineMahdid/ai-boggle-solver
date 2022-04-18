@@ -18,7 +18,7 @@ class Grid:
     def __init__(self, filepath, dictpath):
         """Constructor who take a filepath for the grid and the location of a dictionary file"""
 
-        # Load the file data
+        # Load the boggle file data
         with open(filepath) as file:
             file_data = file.read().splitlines()
     
@@ -41,6 +41,7 @@ class Grid:
             for col_i in range(self.dimension):
                 print(f"Starting DFS at seed r:{row_i}, c:{col_i}")
                 print(self.is_available_matrix)
+
                 seed_letter = self.letters[row_i][col_i]
                 seed_is_available_matrix = copy.deepcopy(self.is_available_matrix)
 
@@ -87,6 +88,7 @@ class Grid:
                 # Recurse in the search
                 next_is_available_matrix = copy.deepcopy(is_available_matrix)
                 self.dfs(next_word, next_row_i, next_col_i, next_is_available_matrix)
+
 
     def print_grid(self):
         """pretty print the boggle grid"""
