@@ -5,11 +5,14 @@
 import sys
 import os
 import copy
+import json
+
+from timeit import default_timer as timer
+from datetime import timedelta
 
 class Grid:
     """Object representation of a Boggle Grid capable of solving itself!"""
     letters = [] # letters in the grid
-    is_available_matrix = [] # matrix to keep track of the letter that are still available to visit
     dimension = 0 # the dimension of the board
     
     nodes = []
@@ -18,7 +21,7 @@ class Grid:
     dict_words = [] # words downloaded from the dictionary
     output_words = [] # the output words after the search
 
-    def __init__(self, filepath, dictpath):
+    def __init__(self, filepath, dictpath, seqpath):
         """Constructor who take a filepath for the grid and the location of a dictionary file"""
 
         # Load the boggle file data
@@ -29,7 +32,6 @@ class Grid:
         for row in file_data:
             columns = row.split(',')
             self.letters.append(columns)
-            self.is_available_matrix.append([True for _ in columns])
 
             for letter in columns:
                 self.nodes.append(letter)
@@ -39,6 +41,10 @@ class Grid:
         # Load the dictionary
         with open(dictpath) as file:
             self.dict_words = file.read().splitlines()
+
+        # load up the sequence frequency and use that to prune the adj matrix
+        with open(seqpath, 'r') as fp:
+            seq_frequency = json.load(fp)
 
         # Create the adjacency matrix which is N*N
         # index = row_i*dimension + col_i
@@ -66,26 +72,32 @@ class Grid:
                         # At this point the step is possible
                         step_index = next_row_i*self.dimension + next_col_i
 
+                        # We don't allow same connection
                         if node_index == step_index:
                             continue
 
+                        # Check if the duo of letter is possible and happen in the dictionary
+                        letter_duo = self.nodes[node_index] + self.nodes[step_index]
+                        if letter_duo not in seq_frequency:
+                            print(f"{letter_duo} is not possible duo!")
+                            continue
+                        else:
+                            print(letter_duo, seq_frequency[letter_duo])
+
                         self.adj_matrix[node_index][step_index] = True
         self.print_adj_matrix()
+        
                         
     def find_all_words(self):
         """main function to find all the words in the grid that are in the dictionary"""
         # Seed of the permutations
-        for row_i in range(self.dimension):
-            for col_i in range(self.dimension):
-                print(f"Starting DFS at seed r:{row_i}, c:{col_i}")
-                print(self.is_available_matrix)
 
-                seed_letter = self.letters[row_i][col_i]
+        for node_index in range(len(self.nodes)):
+            seed_letter = self.nodes[node_index]
 
-                # Need to remove the seed_is_available_matrix
-                node_index = row_i*self.dimension + col_i
-                seed_adj_matrix = copy.deepcopy(self.adj_matrix)
-                self.dfs_graph(seed_letter, node_index, seed_adj_matrix)
+            # copy the adj matrix and recurse
+            seed_adj_matrix = copy.deepcopy(self.adj_matrix)
+            self.dfs_graph(seed_letter, node_index, seed_adj_matrix)
 
 
     def dfs_graph(self, current_word, current_index, adj_matrix):
@@ -108,9 +120,11 @@ class Grid:
                 # Create a new word  
                 next_word = current_word + self.nodes[next_index]
 
-                # Recurse in the search
+                # Recurse in the search (make a copy and remove this node from the selectable ones)
                 next_adj_matrix = copy.deepcopy(adj_matrix)
-                next_adj_matrix[current_index] = [False for _ in range(self.dimension**2)]
+                for i in range(0, len(self.nodes)):
+                    next_adj_matrix[current_index][i] = False
+                    next_adj_matrix[i][current_index] = False
                 self.dfs_graph(next_word, next_index, next_adj_matrix)
 
 
@@ -144,7 +158,7 @@ def boggle_solver(argv):
     
     # Populate the Grid
     # TODO REMOVE THIS HARD CODED DICTIONARY
-    grid = Grid(filepath, 'src/en_dict.txt')
+    grid = Grid(filepath, 'src/en_dict.txt', 'src/en_seq_freq.json')
     grid.print_grid()
     
     # find all the words in the grid
@@ -158,4 +172,10 @@ def boggle_solver(argv):
 
 
 if __name__ == '__main__':
+
+    # Timing of the boggle solver
+    start = timer()
     boggle_solver(sys.argv)
+    end = timer()
+
+    print(f"Solving run time: {timedelta(seconds=end-start)}")
