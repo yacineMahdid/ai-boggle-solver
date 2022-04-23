@@ -5,17 +5,23 @@
 import sys
 import os
 import copy
+import json
+
+from timeit import default_timer as timer
+from datetime import timedelta
 
 class Grid:
     """Object representation of a Boggle Grid capable of solving itself!"""
     letters = [] # letters in the grid
-    is_available_matrix = [] # matrix to keep track of the letter that are still available to visit
     dimension = 0 # the dimension of the board
+    
+    nodes = []
+    adj_matrix = []
 
     dict_words = [] # words downloaded from the dictionary
     output_words = [] # the output words after the search
 
-    def __init__(self, filepath, dictpath):
+    def __init__(self, filepath, dictpath, seqpath):
         """Constructor who take a filepath for the grid and the location of a dictionary file"""
 
         # Load the boggle file data
@@ -26,7 +32,9 @@ class Grid:
         for row in file_data:
             columns = row.split(',')
             self.letters.append(columns)
-            self.is_available_matrix.append([True for _ in columns])
+
+            for letter in columns:
+                self.nodes.append(letter)
 
         self.dimension = len(self.letters)
 
@@ -34,27 +42,69 @@ class Grid:
         with open(dictpath) as file:
             self.dict_words = file.read().splitlines()
 
+        # load up the sequence frequency and use that to prune the adj matrix
+        with open(seqpath, 'r') as fp:
+            seq_frequency = json.load(fp)
+
+        # Create the adjacency matrix which is N*N
+        # index = row_i*dimension + col_i
+        for row_i in range(self.dimension):
+            for col_i in range(self.dimension):
+
+                # Calculate the current node index
+                node_index = row_i*self.dimension + col_i
+                self.adj_matrix.append([False for _ in range(self.dimension**2)])
+
+                # check all of the possible connection with the current node
+                # by trying all possible 8 direction
+                for step_row_i in range(-1,2):
+                    next_row_i = row_i + step_row_i
+
+                    if next_row_i < 0 or next_row_i >= self.dimension:
+                        continue
+
+                    for step_col_i in range(-1, 2):
+                        next_col_i = col_i + step_col_i
+
+                        if next_col_i < 0 or next_col_i >= self.dimension:
+                            continue
+
+                        # At this point the step is possible
+                        step_index = next_row_i*self.dimension + next_col_i
+
+                        # We don't allow same connection
+                        if node_index == step_index:
+                            continue
+
+                        # Check if the duo of letter is possible and happen in the dictionary
+                        letter_duo = self.nodes[node_index] + self.nodes[step_index]
+                        if letter_duo not in seq_frequency:
+                            print(f"{letter_duo} is not possible duo!")
+                            continue
+                        else:
+                            print(letter_duo, seq_frequency[letter_duo])
+
+                        self.adj_matrix[node_index][step_index] = True
+        self.print_adj_matrix()
+        
+                        
     def find_all_words(self):
         """main function to find all the words in the grid that are in the dictionary"""
         # Seed of the permutations
-        for row_i in range(self.dimension):
-            for col_i in range(self.dimension):
-                print(f"Starting DFS at seed r:{row_i}, c:{col_i}")
-                print(self.is_available_matrix)
 
-                seed_letter = self.letters[row_i][col_i]
-                seed_is_available_matrix = copy.deepcopy(self.is_available_matrix)
+        for node_index in range(len(self.nodes)):
+            seed_letter = self.nodes[node_index]
 
-                self.dfs(seed_letter, row_i, col_i, seed_is_available_matrix)
+            # copy the adj matrix and recurse
+            seed_adj_matrix = copy.deepcopy(self.adj_matrix)
+            self.dfs_graph(seed_letter, node_index, seed_adj_matrix)
 
 
-    def dfs(self, current_word, row_i, col_i, is_available_matrix):
+    def dfs_graph(self, current_word, current_index, adj_matrix):
         """ standard depth first search algorithm that will add a word if valid
             self: the current Grid object
             current_word: the current_word formed to date in the traversal
-            row_i: the row-wise location of the current word
-            col_i: the col-wise location of the current word
-            is_available_matrix: the snapshot of the connection that are allowed still in the traversal
+            current_index: the index of the current nodeadj_matrix: adjacency matrix representing the connection in the graph
 
             return None
         """
@@ -63,31 +113,19 @@ class Grid:
             print(current_word)
             self.output_words.append(current_word)
 
-        is_available_matrix[row_i][col_i] = False 
+        # Iterate on each of the connection for this position
+        for next_index in range(0, len(self.nodes)):
+            if adj_matrix[current_index][next_index] == True:
 
-        # iterate on each of the theoretical 8 direction a words can be created
-        for step_row_i in range(-1,2):
-            next_row_i = row_i + step_row_i
-
-            if next_row_i < 0 or next_row_i >= self.dimension:
-                continue
-
-            for step_col_i in range(-1, 2):
-                next_col_i = col_i + step_col_i
-
-                if next_col_i < 0 or next_col_i >= self.dimension:
-                    continue
-
-                # Check for connection, if there is none we skip it
-                if is_available_matrix[next_row_i][next_col_i] is False:
-                    continue
-        
                 # Create a new word  
-                next_word = current_word + self.letters[next_row_i][next_col_i]
+                next_word = current_word + self.nodes[next_index]
 
-                # Recurse in the search
-                next_is_available_matrix = copy.deepcopy(is_available_matrix)
-                self.dfs(next_word, next_row_i, next_col_i, next_is_available_matrix)
+                # Recurse in the search (make a copy and remove this node from the selectable ones)
+                next_adj_matrix = copy.deepcopy(adj_matrix)
+                for i in range(0, len(self.nodes)):
+                    next_adj_matrix[current_index][i] = False
+                    next_adj_matrix[i][current_index] = False
+                self.dfs_graph(next_word, next_index, next_adj_matrix)
 
 
     def print_grid(self):
@@ -96,6 +134,13 @@ class Grid:
         for row in self.letters:
             for letter in row:
                 print(f"[{letter}] ", end="")
+            print("")
+
+    def print_adj_matrix(self):
+        """pretty print the adjacency matrix"""
+        for row in self.adj_matrix:
+            for node in row:
+                print(f"[{node}] ", end="")
             print("")
 
 
@@ -113,7 +158,7 @@ def boggle_solver(argv):
     
     # Populate the Grid
     # TODO REMOVE THIS HARD CODED DICTIONARY
-    grid = Grid(filepath, 'src/en_dict.txt')
+    grid = Grid(filepath, 'src/en_dict.txt', 'src/en_seq_freq.json')
     grid.print_grid()
     
     # find all the words in the grid
@@ -127,4 +172,10 @@ def boggle_solver(argv):
 
 
 if __name__ == '__main__':
+
+    # Timing of the boggle solver
+    start = timer()
     boggle_solver(sys.argv)
+    end = timer()
+
+    print(f"Solving run time: {timedelta(seconds=end-start)}")
