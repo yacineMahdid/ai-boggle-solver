@@ -119,7 +119,6 @@ class Grid:
 
                 # Create a new word  
                 next_word = current_word + self.nodes[next_index]
-                print(next_word)
 
                 # Recurse in the search (make a copy and remove this node from the selectable ones)
                 next_adj_matrix = copy.deepcopy(adj_matrix)
