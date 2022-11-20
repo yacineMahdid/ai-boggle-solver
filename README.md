@@ -25,7 +25,11 @@ There is a few variant of the original boggle game which includes:
 
 ## Current State - Brute Force🦝
 Currently here is what the program needs to be run:
+- run `sudo snap install curl`
 - run `./setup.sh` which will download an [english dictionary]((https://github.com/dwyl/english-words/blob/master/words_alpha.txt))
+- run `python3 -m venv .venv`
+- run `source ./.venv/bin/activate`
+- run `pip install -r requirements.txt`
 - run `python src/main.py BOGGLE_FILE` which will brute force find all the words
 
 the `BOGGLE_FILE` needs to have the same format as the one in the `tests/assets/` folder:

@@ -157,7 +157,6 @@ def boggle_solver(argv):
         raise FileNotFoundError("The file doesn't exist")
     
     # Populate the Grid
-    # TODO REMOVE THIS HARD CODED DICTIONARY
     grid = Grid(filepath, 'src/en_dict.txt', 'src/en_seq_freq.json')
     grid.print_grid()
     
