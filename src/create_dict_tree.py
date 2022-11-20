@@ -6,6 +6,24 @@ import json
 DICTIONARY_NAME = 'src/en_dict.txt'
 LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 
+class Node:
+    letter = ''
+    edges = []
+    depth = 0
+
+    def __init__(self, letter, depth):
+        self.letter = letter
+        self.edges = []
+        self.depth = depth
+
+    def traverse_tree(self):
+        spaces = ' '*self.depth
+        print(spaces + self.letter)
+
+        for node in self.edges:
+            node.traverse_tree()
+
+
 def get_sub_dict(dict, sequence):
     
     sub_dict = []
@@ -16,6 +34,7 @@ def get_sub_dict(dict, sequence):
     return sub_dict    
 
 def get_longest_word(dict):
+
     longest_word_len = 0
 
     for word in dict:
@@ -24,8 +43,7 @@ def get_longest_word(dict):
     
     return longest_word_len
 
-
-def recurse_letters_all(letter_i, sequence, dict, cur_depth, max_dept):
+def recurse_letters_all(letter_i, sequence, dict, sub_tree, cur_depth, max_depth):
 
     if cur_depth == max_depth:
         return
@@ -36,9 +54,14 @@ def recurse_letters_all(letter_i, sequence, dict, cur_depth, max_dept):
     new_sub_dict = get_sub_dict(dict, new_sequence)
 
     if new_sub_dict:
-        # Add this letter into the tree we are creating
+                
+        # Iterate on each letters
         for letter_i in range(26):
-            recurse_letters_all(letter_i, new_sequence, new_sub_dict, new_depth, max_depth)
+            
+            node = Node(LETTERS[letter_i], new_depth)
+            sub_tree.edges.append(node)
+            
+            recurse_letters_all(letter_i, new_sequence, new_sub_dict, node, new_depth, max_depth)
 
 if __name__ == '__main__':
     # Load the dictionary so that we can manipulate it
@@ -47,14 +70,16 @@ if __name__ == '__main__':
     with open(DICTIONARY_NAME) as file:
         file_data = file.read().splitlines()
     
-    #sub_dict = get_sub_dict(file_data, 'albed')
-    #print(sub_dict)
-
     max_depth = get_longest_word(file_data)
 
-    for i in range(26):
-        print(f"{i}")
-        recurse_letters_all(i, '', file_data, 0, max_depth)
+    tree = Node('', 0)
+    for letter_i in range(26):
+        
+        print(f"{letter_i}")
 
-    #print(file_data)
-    
+        node = Node(LETTERS[letter_i], 1)
+        tree.edges.append(node)
+
+        recurse_letters_all(letter_i, '', file_data, node, 0, max_depth)
+
+    tree.traverse_tree()
