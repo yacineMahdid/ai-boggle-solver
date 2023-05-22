@@ -5,7 +5,7 @@
 
 # BUG: Depth variable seems to be absolutely useless
 
-import json
+import pickle 
 
 # Filepath
 DICTIONARY_NAME = 'src/en_dict.txt'
@@ -18,14 +18,14 @@ WORD_COUNT = 0
 # Node that composed the tree structure that will be traverse
 class Node:
     letter = ''
-    edges = [] #node can have up to 26 edges with current english alphabet
+    edges = {} #node can have up to 26 edges with current english alphabet
     depth = 0
     is_word = False
     sequence = ""
 
     def __init__(self, letter, depth, sequence, is_word):
         self.letter = letter
-        self.edges = []
+        self.edges = {}
         self.depth = depth
         self.sequence = sequence
         self.is_word = is_word
@@ -108,7 +108,7 @@ def recurse_letters_all(sequence, dict, sub_tree, cur_depth, max_depth):
 
             # Create the node and append it to the tree
             node = Node(LETTERS[letter_i], new_depth, new_sequence, is_word)
-            sub_tree.edges.append(node)
+            sub_tree.edges[LETTERS[letter_i]] = node
             
             # Recurse with the new parameters
             recurse_letters_all(new_sequence, new_sub_dict, node, new_depth, max_depth)
@@ -128,3 +128,6 @@ if __name__ == '__main__':
 
     # Populate the tree
     recurse_letters_all('', file_data, tree, 0, max_depth)
+
+    file_pi = open('eng_tree.obj', 'wb') 
+    pickle.dump(tree, file_pi)

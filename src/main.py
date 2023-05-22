@@ -5,10 +5,27 @@
 import sys
 import os
 import copy
-import json
+import pickle
 
 from timeit import default_timer as timer
 from datetime import timedelta
+
+# Node that composed the tree structure that will be traverse
+# TODO: need to clean this shit up bc this is copy pasting of class, bad bad
+class Node:
+    letter = ''
+    edges = {} #node can have up to 26 edges with current english alphabet
+    depth = 0
+    is_word = False
+    sequence = ""
+
+    def __init__(self, letter, depth, sequence, is_word):
+        self.letter = letter
+        self.edges = {}
+        self.depth = depth
+        self.sequence = sequence
+        self.is_word = is_word
+
 
 class Grid:
     """Object representation of a Boggle Grid capable of solving itself!"""
@@ -18,10 +35,9 @@ class Grid:
     nodes = []
     adj_matrix = []
 
-    dict_words = [] # words downloaded from the dictionary
     output_words = [] # the output words after the search
 
-    def __init__(self, filepath, dictpath, seqpath):
+    def __init__(self, filepath):
         """Constructor who take a filepath for the grid and the location of a dictionary file"""
 
         # Load the boggle file data
@@ -37,14 +53,6 @@ class Grid:
                 self.nodes.append(letter)
 
         self.dimension = len(self.letters)
-
-        # Load the dictionary
-        with open(dictpath) as file:
-            self.dict_words = file.read().splitlines()
-
-        # load up the sequence frequency and use that to prune the adj matrix
-        with open(seqpath, 'r') as fp:
-            seq_frequency = json.load(fp)
 
         # Create the adjacency matrix which is N*N
         # index = row_i*dimension + col_i
@@ -76,14 +84,6 @@ class Grid:
                         if node_index == step_index:
                             continue
 
-                        # Check if the duo of letter is possible and happen in the dictionary
-                        letter_duo = self.nodes[node_index] + self.nodes[step_index]
-                        if letter_duo not in seq_frequency:
-                            print(f"{letter_duo} is not possible duo!")
-                            continue
-                        else:
-                            print(letter_duo, seq_frequency[letter_duo])
-
                         self.adj_matrix[node_index][step_index] = True
         self.print_adj_matrix()
         
@@ -92,40 +92,47 @@ class Grid:
         """main function to find all the words in the grid that are in the dictionary"""
         # Seed of the permutations
 
+        # Load the dictionary tree
+        filehandler = open('eng_tree.obj', 'rb') 
+        tree = pickle.load(filehandler)
+
         for node_index in range(len(self.nodes)):
             seed_letter = self.nodes[node_index]
+            sub_tree = tree.edges[seed_letter]
 
             # copy the adj matrix and recurse
             seed_adj_matrix = copy.deepcopy(self.adj_matrix)
-            self.dfs_graph(seed_letter, node_index, seed_adj_matrix)
+            self.dfs_graph(node_index, seed_adj_matrix, sub_tree)
 
 
-    def dfs_graph(self, current_word, current_index, adj_matrix):
+    def dfs_graph(self, current_index, adj_matrix, sub_tree):
         """ standard depth first search algorithm that will add a word if valid
             self: the current Grid object
-            current_word: the current_word formed to date in the traversal
             current_index: the index of the current nodeadj_matrix: adjacency matrix representing the connection in the graph
-
+            sub_tree: TODO : add the documentation
+            
             return None
         """
+
         # Check if the new word created is a valid new one
-        if current_word in self.dict_words and current_word not in self.output_words and len(current_word) >= 3:
-            print(current_word)
-            self.output_words.append(current_word)
+        if sub_tree.is_word and len(sub_tree.sequence) >=3 and sub_tree.sequence not in self.output_words:
+           self.output_words.append(sub_tree.sequence) 
+           
 
         # Iterate on each of the connection for this position
         for next_index in range(0, len(self.nodes)):
             if adj_matrix[current_index][next_index] == True:
-
-                # Create a new word  
-                next_word = current_word + self.nodes[next_index]
 
                 # Recurse in the search (make a copy and remove this node from the selectable ones)
                 next_adj_matrix = copy.deepcopy(adj_matrix)
                 for i in range(0, len(self.nodes)):
                     next_adj_matrix[current_index][i] = False
                     next_adj_matrix[i][current_index] = False
-                self.dfs_graph(next_word, next_index, next_adj_matrix)
+
+                # only jump into the recursion if there is a possible word with the combination
+                if self.nodes[next_index] in sub_tree.edges:
+                    new_sub_tree = sub_tree.edges[self.nodes[next_index]]
+                    self.dfs_graph(next_index, next_adj_matrix, new_sub_tree)
 
 
     def print_grid(self):
@@ -155,9 +162,9 @@ def boggle_solver(argv):
 
     if not os.path.isfile(filepath):
         raise FileNotFoundError("The file doesn't exist")
-    
+
     # Populate the Grid
-    grid = Grid(filepath, 'src/en_dict.txt', 'src/en_seq_freq.json')
+    grid = Grid(filepath)
     grid.print_grid()
     
     # find all the words in the grid
