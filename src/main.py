@@ -10,22 +10,9 @@ import pickle
 from timeit import default_timer as timer
 from datetime import timedelta
 
+from helper import Node
+
 # Node that composed the tree structure that will be traverse
-# TODO: need to clean this shit up bc this is copy pasting of class, bad bad
-class Node:
-    letter = ''
-    edges = {} #node can have up to 26 edges with current english alphabet
-    depth = 0
-    is_word = False
-    sequence = ""
-
-    def __init__(self, letter, depth, sequence, is_word):
-        self.letter = letter
-        self.edges = {}
-        self.depth = depth
-        self.sequence = sequence
-        self.is_word = is_word
-
 
 class Grid:
     """Object representation of a Boggle Grid capable of solving itself!"""
