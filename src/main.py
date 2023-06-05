@@ -72,7 +72,6 @@ class Grid:
                             continue
 
                         self.adj_matrix[node_index][step_index] = True
-        self.print_adj_matrix()
         
                         
     def find_all_words(self):
@@ -137,15 +136,17 @@ class Grid:
                 print(f"[{node}] ", end="")
             print("")
 
+if __name__ == '__main__':
 
-def boggle_solver(argv):
-
+    # Timing of the boggle solver
+    start = timer()
+    
     # Input Checking
-    if len(argv) != 2:
+    if len(sys.argv) != 2:
         raise AttributeError("Only one argument must be given to the boggle solver")
 
     # Check if file exist
-    filepath = argv[1]
+    filepath = sys.argv[1]
 
     if not os.path.isfile(filepath):
         raise FileNotFoundError("The file doesn't exist")
@@ -153,6 +154,8 @@ def boggle_solver(argv):
     # Populate the Grid
     grid = Grid(filepath)
     grid.print_grid()
+    grid.print_adj_matrix()
+
     
     # find all the words in the grid
     grid.find_all_words()
@@ -161,14 +164,6 @@ def boggle_solver(argv):
     for word in grid.output_words:
         print(word)
 
-    return grid.output_words
-
-
-if __name__ == '__main__':
-
-    # Timing of the boggle solver
-    start = timer()
-    boggle_solver(sys.argv)
     end = timer()
 
     print(f"Solving run time: {timedelta(seconds=end-start)}")
